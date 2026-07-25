@@ -1,0 +1,13 @@
+torch
+transformers<5.0
+setfit
+sentence-transformers
+datasets
+scikit-learn
+jupyter
+ipykernel
+pandas
+numpy
+matplotlib
+seaborn
+ipywidgets
