@@ -9,12 +9,12 @@ weights — that opensearch/model_service consumes.
 ## What This Project Produces
 
 ```
-models/classifier/          fine-tuned distilbert weights
+models/classifier/          fine-tuned distilbert weights via SetFit
                             copy this directory to opensearch/models/classifier/
 ```
 
-The cross-encoder (ms-marco-MiniLM-L6-v2) needs no fine-tuning. It downloads
-from HuggingFace when the opensearch model service container starts.
+The cross-encoder (cross-encoder/ms-marco-MiniLM-L6-v2) needs no fine-tuning.
+Notebook 04 loads and validates it against sample pairs only.
 
 ---
 
@@ -22,22 +22,23 @@ from HuggingFace when the opensearch model service container starts.
 
 ```
 opensearch-models/
-├── notebooks/
-│   ├── 01_explore_dataset.ipynb      explore and validate training data
-│   ├── 02_fine_tune_classifier.ipynb fine-tune distilbert via SetFit
-│   ├── 03_evaluate_classifier.ipynb  evaluate accuracy on held-out test set
-│   └── 04_evaluate_relevance.ipynb   validate cross-encoder on sample pairs
-├── data/
-│   ├── raw/                          raw labelled query examples
-│   └── processed/                    cleaned and split datasets
-├── models/
-│   └── classifier/                   exported weights after fine-tuning
-├── docs/
-│   ├── DATASET.md                    labelling guidelines
-│   ├── TRAINING.md                   fine-tuning procedure
-│   └── EXPORT.md                     how to export and transfer weights
-├── requirements.txt
-└── README.md
+    notebooks/
+        01_explore_dataset.ipynb      explore and validate training data
+        02_fine_tune_classifier.ipynb fine-tune distilbert via SetFit
+        03_evaluate_classifier.ipynb  evaluate accuracy on held-out test set
+        04_evaluate_relevance.ipynb   validate cross-encoder on sample pairs
+    data/
+        raw/
+            queries.csv               labelled query examples
+        processed/                    train/val/test splits written here by 01
+    models/
+        classifier/                   exported weights written here by 02
+    docs/
+        DATASET.md                    labelling guidelines
+        TRAINING.md                   fine-tuning procedure
+        EXPORT.md                     how to export and transfer weights
+    requirements.txt
+    README.md
 ```
 
 ---
@@ -46,17 +47,24 @@ opensearch-models/
 
 ```bash
 python -m venv .venv
-source .venv/bin/activate
+source .venv/bin/activate          # Windows: .venv\Scripts\activate
 pip install -r requirements.txt
-jupyter notebook
 ```
+
+Open the project in VS Code. Select the `.venv` interpreter from the kernel
+picker in the top-right of any notebook. No separate Jupyter server needed.
+
+Required VS Code extensions:
+- ms-python.python
+- ms-toolsai.jupyter
+- ms-python.pylance
 
 ---
 
 ## Workflow
 
 ```
-1. Build and label the dataset       see docs/DATASET.md
+1. Build and label the dataset       data/raw/queries.csv (done — see docs/DATASET.md)
 2. Explore the dataset               run 01_explore_dataset.ipynb
 3. Fine-tune the classifier          run 02_fine_tune_classifier.ipynb
 4. Evaluate accuracy                 run 03_evaluate_classifier.ipynb
@@ -67,15 +75,28 @@ jupyter notebook
 
 ---
 
-## Requirements
+## Accuracy Thresholds
+
+The classifier is not ready to export until it clears both of these on the
+held-out test set:
 
 ```
-torch
-transformers
-setfit
-sentence-transformers
-datasets
-scikit-learn
-jupyter
-pandas
+overall accuracy        > 90%
+per-class F1            > 0.85 on every class
+```
+
+If any class falls below, add more examples for that class in queries.csv,
+rerun notebook 01 to regenerate splits, and retrain.
+
+---
+
+## Intent Classes
+
+```
+news          recent events, breaking news, scores, announcements
+factual       single-fact lookups, definitions, dates, conversions
+code          programming, debugging, syntax, documentation, tools
+research      summaries, comparisons, deep reads, academic topics
+commercial    product comparisons, prices, reviews, recommendations
+general       everything that does not fit a specific class
 ```
