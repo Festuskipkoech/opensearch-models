@@ -46,9 +46,10 @@ opensearch-models/
 ## Setup
 
 ```bash
-python -m venv .venv
-source .venv/bin/activate          # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+uv venv
+uv init
+source .venv/bin/activate # Windows: .venv\Scripts\activate
+uv add -r requirements.txt
 ```
 
 Open the project in VS Code. Select the `.venv` interpreter from the kernel
